@@ -5,6 +5,7 @@ from pyspark.sql import SparkSession
 
 input_properties = sys.argv[1]
 input_currencies = sys.argv[2]
+
 target_path = sys.argv[3]
 
 
@@ -17,6 +18,8 @@ spark.read.json(
 ).createOrReplaceTempView(
     "land_registry_price_paid_uk"
 )
+
+spark.table('land_registry_price_paid_uk').show()
 
 # >>> df.printSchema()
 # root
@@ -40,6 +43,8 @@ spark.read.json(
 spark.read.json(input_currencies).withColumn(
     "date", col("date").cast("date")
 ).createOrReplaceTempView("currencies")
+
+spark.table('currencies').show()
 
 # >>> df.printSchema()
 # root
