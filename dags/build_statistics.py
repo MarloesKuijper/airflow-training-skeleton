@@ -81,6 +81,5 @@ aggregation = spark.sql(
 
 (
     aggregation.write.mode("overwrite")
-        .partitionBy("transfer_date")
         .parquet(target_path)
 )
