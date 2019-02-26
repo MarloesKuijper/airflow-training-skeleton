@@ -48,6 +48,7 @@ class HttpToGcsOperator(BaseOperator):
     ui_color = '#f4a460'
     @apply_defaults
     def __init__(self,
+                 task_id,
                  gcs_conn_id,
                  http_conn_id,
                  gcs_path,
@@ -77,11 +78,11 @@ class HttpToGcsOperator(BaseOperator):
 
 for target_currency in ['EUR', 'USD']:
     http_to_gcs = HttpToGcsOperator(
+        task_id='http_to_gcs',
         gcs_conn_id='postgres_conn',
-        gcs_path='currency/{{ ds }}/' + target_currency + '.json',
+        gcs_path='currency/{{ ds }}/' + str(target_currency) + '.json',
         http_conn_id='http_new',
         bucket='marloes_bucket',
-        task_id='http_to_gcs',
         endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
         dag=dag,
     )
