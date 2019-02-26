@@ -13,9 +13,10 @@ dag = DAG(
     description="Demo DAG showing BranchPythonOperator.",
     schedule_interval="0 0 * * *",
 )
+
+
 def print_weekday(execution_date, **context):
     print(execution_date.strftime("%a"))
-
 
 
 print_weekday = PythonOperator(
@@ -26,7 +27,9 @@ print_weekday = PythonOperator(
 
 )
 
-weekday_person_to_email = {
+
+def pick_a_person(execution_date, **context):
+    weekday_person_to_email = {
         0: "Bob",  # Monday
         1: "Joe",  # Tuesday
         2: "Alice",  # Wednesday
@@ -35,20 +38,17 @@ weekday_person_to_email = {
         5: "Alice",  # Saturday
         6: "Alice",  # Sunday
     }
-
-def pick_a_person(execution_date, day_to_person, **context):
-    day = execution_date.strftime("%a")
-    return day_to_person[day]
-
+    return "email_" + str(weekday_person_to_email[execution_date.weekday()])
 
 
 branching = BranchPythonOperator(
     task_id='branching',
-    python_callable=pick_a_person(weekday_person_to_email),
+    python_callable=pick_a_person,
+    provide_context=True,
     dag=dag)
 
-final_task = DummyOperator(task_id=day, dag=dag)
+email = [DummyOperator(task_id="email_" + i, dag=dag) for i in ["Bob", "Joe", "Alice"]]
 
+final_task = DummyOperator(task_id="final_task", dag=dag, trigger_rule='one_success')
 
-for day in [0,1,2,3,4,5,6]:
-    print_weekday >> branching >> final_task
+print_weekday >> branching >> email >> final_task
