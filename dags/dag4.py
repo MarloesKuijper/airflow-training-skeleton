@@ -43,7 +43,7 @@ class HttpToGcsOperator(BaseOperator):
     :param gcs_path: The path of the GCS to store the result
     :type gcs_path: string
     """
-    template_fields = ('endpoint',)
+    template_fields = ('endpoint', 'gcs_path',)
     template_ext = ()
     ui_color = '#f4a460'
     @apply_defaults
@@ -79,7 +79,7 @@ for target_currency in ['EUR', 'USD']:
     HttpToGcsOperator(
         task_id='http_to_gcs',
         gcs_conn_id='postgres_conn',
-        gcs_path="currency/{{ ds }}/{{ target_currency }}.json",
+        gcs_path="currency/{{ ds }}/" + target_currency + ".json",
         http_conn_id='http_new',
         bucket='marloes_bucket',
         endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
