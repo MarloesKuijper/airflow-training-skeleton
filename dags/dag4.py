@@ -119,7 +119,7 @@ compute_aggregates = DataProcPySparkOperator(
 gcs_to_bq = GoogleCloudStorageToBigQueryOperator(
     task_id="write_to_bq",
     bucket='marloes_bucket',
-    source_objects=["statistics/transfer_date={{ ds }}/*"],
+    source_objects=["statistics/{{ ds }}/*"],
     destination_project_dataset_table=PROJECT_ID + ":airflow_test.land_registry_price${{ ds_nodash }}",
     source_format="PARQUET",
     write_disposition="WRITE_TRUNCATE",
