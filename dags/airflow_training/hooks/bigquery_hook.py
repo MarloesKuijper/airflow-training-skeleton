@@ -28,7 +28,7 @@ from builtins import range
 from past.builtins import basestring
 
 from airflow import AirflowException
-from gcp_api_base_hook import GoogleCloudBaseHook
+from airflow.contrib.hooks.gcp_api_base_hook import GoogleCloudBaseHook
 from airflow.hooks.dbapi_hook import DbApiHook
 from airflow.utils.log.logging_mixin import LoggingMixin
 from apiclient.discovery import HttpError, build
