@@ -22,7 +22,7 @@ dag = DAG(
 pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
     task_id="postgres_to_gcs",
     postgres_conn_id='postgres_conn',
-    sql="SELECT transfer_date, price, city, county, newly_built, ppd_category_type FROM `public.land_registry_price_paid_uk` WHERE transfer_date = '2019-02-15'",
+    sql="SELECT * FROM public.land_registry_price_paid_uk WHERE transfer_date = '{{ ds }}'",
     bucket="marloes_bucket",
     filename="test_file",
     dag=dag,
