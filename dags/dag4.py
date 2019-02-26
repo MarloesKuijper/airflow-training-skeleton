@@ -6,6 +6,12 @@ from bigquery_get_data import BigQueryGetDataOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable, Connection
 
+from tempfile import NamedTemporaryFile
+from airflow.hooks.http_hook import HttpHook
+from airflow.models import BaseOperator
+from airflow.utils.decorators import apply_defaults
+from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
+
 
 from airflow_training.operators.postgres_to_gcs import PostgresToGoogleCloudStorageOperator
 
@@ -26,4 +32,43 @@ pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
     bucket="marloes_bucket",
     filename="land_registry_uk/test_file_" + "{{ ds }}.json",
     dag=dag,
+)
+
+
+class HttpToGcsOperator(BaseOperator):
+    """
+    Calls an endpoint on an HTTP system to execute an action
+    :param http_conn_id: The connection to run the operator against
+    :type http_conn_id: string
+    :param endpoint: The relative part of the full url. (templated)
+    :type endpoint: string
+    :param gcs_path: The path of the GCS to store the result
+    :type gcs_path: string
+    """
+    template_fields = ('endpoint')
+    template_ext = ()
+    ui_color = '#f4a460'
+    @apply_defaults
+    def __init__(self, conn_id, target_currency,
+                 *args, **kwargs):
+        super(HttpToGcsOperator, self).__init__(*args, **kwargs)
+        self.method = 'GET'
+        self.conn_id = conn_id
+        self.target_currency = target_currency
+        self.endpoint = endpoint
+
+    def execute(self, context):
+        http = HttpHook(self.method, http_conn_id=self.conn_id)
+        response = http.run(self.endpoint)
+        self.log(response.text)
+
+        return response.text
+
+
+http_to_gcs = HttpToGcsOperator(
+    http_conn_id='http_new',
+    task_id='http_to_gcs',
+    target_currency='EUR',
+    endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
+    dag=dag
 )
