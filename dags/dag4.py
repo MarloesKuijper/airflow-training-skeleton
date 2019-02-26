@@ -1,9 +1,7 @@
 import airflow
 from airflow import DAG
 from datetime import datetime
-from airflow.operators.slack_operator import SlackAPIPostOperator
-from bigquery_get_data import BigQueryGetDataOperator
-from airflow.operators.python_operator import PythonOperator
+
 from airflow.models import Variable, Connection
 
 from tempfile import NamedTemporaryFile
@@ -30,7 +28,7 @@ pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
     postgres_conn_id='postgres_conn',
     sql="SELECT * FROM public.land_registry_price_paid_uk WHERE transfer_date = '{{ ds }}'",
     bucket="marloes_bucket",
-    filename="land_registry_uk/test_file_" + "{{ ds }}.json",
+    filename="land_registry_uk/{{ ds }}/data.json",
     dag=dag,
 )
 
@@ -45,17 +43,23 @@ class HttpToGcsOperator(BaseOperator):
     :param gcs_path: The path of the GCS to store the result
     :type gcs_path: string
     """
-    template_fields = ('endpoint')
+    template_fields = ('endpoint',)
     template_ext = ()
     ui_color = '#f4a460'
     @apply_defaults
     def __init__(self,
+                 gcs_conn_id,
                  http_conn_id,
+                 gcs_path,
                  target_currency,
+                 bucket,
                  endpoint,
                  *args, **kwargs):
         super(HttpToGcsOperator, self).__init__(*args, **kwargs)
+        self.gcs_conn_id = gcs_conn_id
+        self.gcs_path = gcs_path
         self.http_conn_id = http_conn_id
+        self.bucket = bucket
         self.target_currency = target_currency
         self.endpoint = endpoint
         self.method = 'GET'
@@ -65,13 +69,21 @@ class HttpToGcsOperator(BaseOperator):
         response = http.run(self.endpoint)
         self.log(response.text)
 
-        return response.text
+        with NamedTemporaryFile() as tmp_file:
+            tmp_file.write(response.content)
+            tmp_file.flush()
+
+            hook = GoogleCloudStorageHook(google_cloud_storage_conn_id=self.gcs_conn_id)
+            hook.upload(bucket=self.bucket, object=self.gcs_path, filename=tmp_file)
 
 
-http_to_gcs = HttpToGcsOperator(
-    http_conn_id='http_new',
-    task_id='http_to_gcs',
-    target_currency='EUR',
-    endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
-    dag=dag,
-)
+for target_currency in ['EUR', 'USD']:
+    http_to_gcs = HttpToGcsOperator(
+        gcs_conn_id='postgres_conn',
+        gcs_path='currency/{{ ds }}/' + target_currency + '.json',
+        http_conn_id='http_new',
+        bucket='marloes_bucket',
+        task_id='http_to_gcs',
+        endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
+        dag=dag,
+    )
