@@ -51,7 +51,6 @@ class HttpToGcsOperator(BaseOperator):
                  gcs_conn_id,
                  http_conn_id,
                  gcs_path,
-                 target_currency,
                  bucket,
                  endpoint,
                  *args, **kwargs):
@@ -60,7 +59,6 @@ class HttpToGcsOperator(BaseOperator):
         self.gcs_path = gcs_path
         self.http_conn_id = http_conn_id
         self.bucket = bucket
-        self.target_currency = target_currency
         self.endpoint = endpoint
         self.method = 'GET'
 
