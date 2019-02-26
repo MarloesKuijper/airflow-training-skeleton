@@ -28,7 +28,7 @@ pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
     postgres_conn_id='postgres_conn',
     sql="SELECT * FROM public.land_registry_price_paid_uk WHERE transfer_date = '{{ ds }}'",
     bucket="marloes_bucket",
-    filename="land_registry_uk/{{ ds }}/data.json",
+    filename="land_registry_uk/{{ ds }}/house_pricing.json",
     dag=dag,
 )
 
@@ -79,7 +79,7 @@ for target_currency in ['EUR', 'USD']:
     HttpToGcsOperator(
         task_id='http_to_gcs',
         gcs_conn_id='postgres_conn',
-        gcs_path='currency/{{ ds }}/' + str(target_currency) + '.json',
+        gcs_path="currency/{{ ds }}/{{ target_currency }}.json",
         http_conn_id='http_new',
         bucket='marloes_bucket',
         endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
