@@ -72,7 +72,7 @@ class HttpToGcsOperator(BaseOperator):
             tmp_file.flush()
 
             hook = GoogleCloudStorageHook(google_cloud_storage_conn_id=self.gcs_conn_id)
-            hook.upload(bucket=self.bucket, object=self.gcs_path, filename=tmp_file)
+            hook.upload(bucket=self.bucket, object=self.gcs_path, filename=tmp_file.name)
 
 
 for target_currency in ['EUR', 'USD']:
