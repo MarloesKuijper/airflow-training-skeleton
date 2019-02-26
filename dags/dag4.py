@@ -96,7 +96,7 @@ for target_currency in ['EUR', 'USD']:
         gcs_path="currency/{{ ds }}/" + target_currency + ".json",
         http_conn_id='http_new',
         bucket='marloes_bucket',
-        endpoint="/convert-currency?date={{ ds }}&from=GBP&to=" + target_currency,
+        endpoint="/convert-currency?date={{ ds }}&from=GBP&to=" + str(target_currency),
         dag=dag,
 
     ) >> dataproc_create_cluster
@@ -117,7 +117,7 @@ compute_aggregates = DataProcPySparkOperator(
 gcs_to_bq = GoogleCloudStorageToBigQueryOperator(
     task_id="write_to_bq",
     bucket='marloes_bucket',
-    source_objects=["statistics/{{ ds }}/*"],
+    source_objects=["statistics/{{ ds }}/*.parquet"],
     destination_project_dataset_table=PROJECT_ID + ":airflow_test.land_registry_price${{ ds_nodash }}",
     source_format="PARQUET",
     write_disposition="WRITE_TRUNCATE",
