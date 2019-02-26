@@ -77,6 +77,16 @@ class HttpToGcsOperator(BaseOperator):
             hook = GoogleCloudStorageHook(google_cloud_storage_conn_id=self.gcs_conn_id)
             hook.upload(bucket=self.bucket, object=self.gcs_path, filename=tmp_file.name)
 
+PROJECT_ID = 'airflowbolcom-9362d2a84f6f553b'
+
+dataproc_create_cluster = DataprocClusterCreateOperator(
+    task_id="create_dataproc",
+    cluster_name="pricing-analysis-{{ ds }}",
+    project_id=PROJECT_ID,
+    num_workers=2,
+    zone="europe-west4-a",
+    dag=dag,)
+
 
 for target_currency in ['EUR', 'USD']:
     HttpToGcsOperator(
@@ -88,18 +98,11 @@ for target_currency in ['EUR', 'USD']:
         bucket='marloes_bucket',
         endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
         dag=dag,
-    )
+
+    ) >> dataproc_create_cluster
 
 
-PROJECT_ID = 'airflowbolcom-9362d2a84f6f553b'
 
-dataproc_create_cluster = DataprocClusterCreateOperator(
-    task_id="create_dataproc",
-    cluster_name="pricing-analysis-{{ ds }}",
-    project_id=PROJECT_ID,
-    num_workers=2,
-    zone="europe-west4-a",
-    dag=dag,)
 
 compute_aggregates = DataProcPySparkOperator(
     task_id='compute_aggregates',
@@ -121,3 +124,6 @@ gcs_to_bq = GoogleCloudStorageToBigQueryOperator(
     source_format="PARQUET",
     write_disposition="WRITE_TRUNCATE",
 dag=dag,)
+
+
+pgsl_to_gcs >> dataproc_create_cluster >> compute_aggregates >> gcs_to_bq
