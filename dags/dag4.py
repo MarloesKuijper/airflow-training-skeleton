@@ -90,7 +90,7 @@ for target_currency in ['EUR', 'USD']:
     )
 
 
-PROJECT_ID = 'Training Boldotcom - mkuijper'
+PROJECT_ID = 'airflowbolcom-9362d2a84f6f553b'
 
 dataproc_create_cluster = DataprocClusterCreateOperator(
     task_id="create_dataproc",
@@ -102,7 +102,7 @@ dataproc_create_cluster = DataprocClusterCreateOperator(
 
 compute_aggregates = DataProcPySparkOperator(
     task_id='compute_aggregates',
-    main="gs://europe-west1-training-airfl-a31ccad6-bucket/build_statistics.py",
+    main="gs://europe-west1-training-airfl-a31ccad6-bucket/dags/build_statistics.py",
     cluster_name='pricing_analysis-{{ ds }}',
     arguments=[
         "gs://marloes_bucket/currency/{{ ds }}/*.json",
