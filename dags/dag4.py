@@ -48,7 +48,6 @@ class HttpToGcsOperator(BaseOperator):
     ui_color = '#f4a460'
     @apply_defaults
     def __init__(self,
-                 task_id,
                  gcs_conn_id,
                  http_conn_id,
                  gcs_path,
@@ -77,7 +76,7 @@ class HttpToGcsOperator(BaseOperator):
 
 
 for target_currency in ['EUR', 'USD']:
-    http_to_gcs = HttpToGcsOperator(
+    HttpToGcsOperator(
         task_id='http_to_gcs',
         gcs_conn_id='postgres_conn',
         gcs_path='currency/{{ ds }}/' + str(target_currency) + '.json',
