@@ -13,6 +13,8 @@ from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 
 from airflow_training.operators.postgres_to_gcs import PostgresToGoogleCloudStorageOperator
 
+from airflow.contrib.operators.dataproc_operator import (DataprocClusterCreateOperator, DataprocClusterDeleteOperator, DataProcPySparkOperator,)
+
 dag = DAG(
     dag_id='cool_id_2',
     schedule_interval='@daily',
@@ -78,6 +80,7 @@ class HttpToGcsOperator(BaseOperator):
 for target_currency in ['EUR', 'USD']:
     HttpToGcsOperator(
         task_id='get_currency_' + str(target_currency),
+        # when there are multiple options (E.g. in a loop), make task_id parameterized
         gcs_conn_id='postgres_conn',
         gcs_path="currency/{{ ds }}/" + target_currency + ".json",
         http_conn_id='http_new',
@@ -85,3 +88,25 @@ for target_currency in ['EUR', 'USD']:
         endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
         dag=dag,
     )
+
+
+PROJECT_ID = 'Training Boldotcom - mkuijper'
+
+dataproc_create_cluster = DataprocClusterCreateOperator(
+    task_id="create_dataproc",
+    cluster_name="pricing-analysis-{{ ds }}",
+    project_id=PROJECT_ID,
+    num_workers=2,
+    zone="europe-west4-a",
+    dag=dag,)
+
+compute_aggregates = DataProcPySparkOperator(
+    task_id='compute_aggregates',
+    main="gs://europe-west1-training-airfl-a31ccad6-bucket/build_statistics.py",
+    cluster_name='pricing_analysis-{{ ds }}',
+    arguments=[
+        "gs://marloes_bucket/currency/{{ ds }}/*.json",
+        "gs://marloes_bucket/land_registry_uk/{{ ds }}/*.json"
+    ],
+    dag=dag,
+)
