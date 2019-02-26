@@ -77,7 +77,7 @@ class HttpToGcsOperator(BaseOperator):
 
 for target_currency in ['EUR', 'USD']:
     HttpToGcsOperator(
-        task_id='http_to_gcs',
+        task_id='get_currency_' + str(target_currency),
         gcs_conn_id='postgres_conn',
         gcs_path="currency/{{ ds }}/" + target_currency + ".json",
         http_conn_id='http_new',
