@@ -49,7 +49,7 @@ class HttpToGcsOperator(BaseOperator):
     template_ext = ()
     ui_color = '#f4a460'
     @apply_defaults
-    def __init__(self, conn_id, target_currency,
+    def __init__(self, conn_id, target_currency, endpoint,
                  *args, **kwargs):
         super(HttpToGcsOperator, self).__init__(*args, **kwargs)
         self.method = 'GET'
@@ -66,9 +66,9 @@ class HttpToGcsOperator(BaseOperator):
 
 
 http_to_gcs = HttpToGcsOperator(
-    http_conn_id='http_new',
+    conn_id='http_new',
     task_id='http_to_gcs',
     target_currency='EUR',
     endpoint="/convert-currency?date={{ ds }}&from=GBP&to={{ target_currency }}",
-    dag=dag
+    dag=dag,
 )
