@@ -12,6 +12,7 @@ from airflow.contrib.hooks.gcs_hook import GoogleCloudStorageHook
 
 
 from airflow_training.operators.postgres_to_gcs import PostgresToGoogleCloudStorageOperator
+from airflow_training.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
 from airflow.contrib.operators.dataproc_operator import (DataprocClusterCreateOperator, DataprocClusterDeleteOperator, DataProcPySparkOperator,)
 
